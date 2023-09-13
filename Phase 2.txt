@@ -1,0 +1,293 @@
+#pragma once
+#include "Client.h"
+#include <vector>
+#include <iterator>
+
+class Employee : public Person
+{
+private:
+	double salary;
+public:
+	Employee() : Person() {
+		salary = 0;
+	}
+	Employee(int id, string name, string password, double salary) : Person(id, name, password) {
+		setSalary(salary);
+	}
+
+	void setSalary(double salary) {
+		if (Validation::validateSalary(salary)) 
+			this->salary = salary;
+		else cout << "Invalid salary\n";
+	}
+
+	double getSalary() {
+		return salary;
+	}
+	void display() {
+		Person::display();
+		cout << "Salary : " << salary << endl;
+	}
+
+	void addClient(Client& client) {
+		allClients.push_back(client);
+	}
+	Client* searchClient(int id) {
+		for (clIt = allClients.begin(); clIt != allClients.end(); clIt++) {
+			if (clIt->getID() == id) return clIt._Ptr;
+		}
+		return NULL;
+	}
+	void listClient() {
+		for (clIt = allClients.begin(); clIt != allClients.end(); clIt++) {
+			clIt->display();
+			cout << "-------------------------\n";
+		}
+	}
+	void editClient(int id, string name, string password, double balance) {
+		searchClient(id)->setName(name);
+		searchClient(id)->setPassword(password);
+		searchClient(id)->setBalance(balance);
+	}
+};
+
+
+static vector<Employee> allEmployees;
+static vector<Employee>::iterator eIt;
+
+
+============================================================================================
+
+#pragma once
+#include "Employee.h"
+class Admin : public Employee
+{
+public:
+	Admin() : Employee() {
+
+	}
+	Admin(int id, string name, string password, double salary) : Employee(id, name, password, salary) {
+
+	}
+	void addEmployee(Employee& employee) {
+		allEmployees.push_back(employee);
+	}
+	Employee* searchEmployee(int id) {
+		for (eIt = allEmployees.begin(); eIt != allEmployees.end(); eIt++) {
+			if (eIt->getID() == id) return eIt._Ptr;
+		}
+		return NULL;
+	}
+	void editEmployee(int id, string name, string password, double salary) {
+		searchEmployee(id)->setName(name);
+		searchEmployee(id)->setPassword(password);
+		searchEmployee(id)->setSalary(salary);
+	}
+	void listEmployee() {
+		for (eIt = allEmployees.begin(); eIt != allEmployees.end(); eIt++) {
+			eIt->display();
+			cout << "--------------------\n";
+		}
+	}
+};
+
+static vector<Admin> allAdmins;
+static vector<Admin>::iterator aIt;
+
+=========================================================================
+
+#pragma once
+#include "Admin.h"
+
+class DataSourceInterface {
+protected:
+	virtual void addClient(Client) = 0;
+	virtual void addEmployee(Employee) = 0;
+	virtual void addAdmin(Admin) = 0;
+	virtual void getAllClients() = 0;
+	virtual void getAllEmployees() = 0;
+	virtual void getAllAdmins() = 0;
+	virtual void removeAllClients() = 0;
+	virtual void removeAllEmployees() = 0;
+	virtual void removeAllAdmins() = 0;
+};
+
+==========================================================================
+
+#pragma once
+#include "DataSourceInterface.h"
+#include "FileHelper.h"
+
+class FileManager : public DataSourceInterface {
+private:
+	static void addClient(Client client) {
+		FilesHelper::saveClient(client);
+	}
+	static void addEmployee(Employee employee) {
+		FilesHelper::saveEmployee("Employees.txt", "EmployeeLastId.txt", employee);
+	}
+	static void addAdmin(Admin admin) {
+		FilesHelper::saveEmployee("Admins.txt", "AdminLastId.txt", admin);
+	}
+	static void getAllClients() {
+		FilesHelper::getClients();
+	}
+	static void getAllEmployees() {
+		FilesHelper::getEmployees();
+	}
+	static void getAllAdmins() {
+		FilesHelper::getAdmins();
+	}
+	static void removeAllClients() {
+		FilesHelper::clearFile("Clients.txt", "ClientLastId.txt");
+	}
+	static void removeAllEmployees() {
+		FilesHelper::clearFile("Employees.txt", "EmployeeLastId.txt");
+	}
+	static void removeAllAdmins() {
+		FilesHelper::clearFile("Admins.txt", "AdminLastId.txt");
+	}
+public:
+	static void getAllData() {
+		getAllClients();
+		getAllEmployees();
+		getAllAdmins();
+	}
+	static void updateClients() {
+		removeAllClients();
+		for (clIt = allClients.begin(); clIt != allClients.end(); clIt++) addClient(*clIt);
+	}
+	static void updateEmployees() {
+		removeAllEmployees();
+		for (eIt = allEmployees.begin(); eIt != allEmployees.end(); eIt++) addEmployee(*eIt);
+	}
+	static void updateAdmins() {
+		removeAllAdmins();
+		for (aIt = allAdmins.begin(); aIt != allAdmins.end(); aIt++) addAdmin(*aIt);
+	}
+};
+
+============================================================================
+
+#pragma once
+#include <fstream>
+#include "Parser.h"
+
+class FilesHelper {
+private:
+	static void saveLast(string fileName, int id) {
+		ofstream file;
+		file.open(fileName);
+		file << id;
+		file.close();
+	}
+public:
+	static int getLast(string fileName) {
+		ifstream file;
+		file.open(fileName);
+		int id;
+		file >> id;
+		file.close();
+		return id;
+	}
+	static void saveClient(Client c) {
+		int id = getLast("ClientLastId.txt");
+		fstream file;
+		file.open("Clients.txt", ios::app);
+		file << id + 1 << '&' << c.getName() << '&' << c.getPassword() << '&' << c.getBalance() << "\n";
+		file.close();
+		saveLast("ClientLastId.txt", id + 1);
+	}
+	static void saveEmployee(string fileName, string lastIdFile, Employee e) {
+		int id = getLast(lastIdFile);
+		fstream file;
+		file.open(fileName, ios::app);
+		file << id + 1 << '&' << e.getName() << '&' << e.getPassword() << '&' << e.getSalary() << "\n";
+		file.close();
+		saveLast(lastIdFile, id + 1);
+	}
+	static void getClients() {
+		string line;
+		ifstream file;
+		file.open("Clients.txt");
+		while (getline(file, line)) {
+			Client c = Parser::parseToClient(line);
+			allClients.push_back(c);
+		}
+		file.close();
+	}
+	static void getEmployees() {
+		string line;
+		ifstream file;
+		file.open("Employees.txt");
+		while (getline(file, line)) {
+			Employee e = Parser::parseToEmployee(line);
+			allEmployees.push_back(e);
+		}
+		file.close();
+	}
+	static void getAdmins() {
+		string line;
+		ifstream file;
+		file.open("Admins.txt");
+		while (getline(file, line)) {
+			Admin a = Parser::parseToAdmin(line);
+			allAdmins.push_back(a);
+		}
+		file.close();
+	}
+	static void clearFile(string fileName, string lastIdFile) {
+		fstream file1, file2;
+		file1.open(fileName, ios::out);
+		file1.close();
+		file2.open(lastIdFile, ios::out);
+		file2 << 0;
+		file2.close();
+	}
+};
+
+===============================================================================
+
+#pragma once
+#include <sstream>
+#include "Admin.h"
+
+class Parser {
+private:
+	static vector<string> split(string line) {
+		stringstream stream(line);
+		string token;
+		vector<string> info;
+		while (getline(stream, token, '&')) info.push_back(token);
+		return info;
+	}
+public:
+	static Client parseToClient(string line) {
+		vector<string> info = split(line);
+		Client client;
+		client.setID(stoi(info[0]));
+		client.setName(info[1]);
+		client.setPassword(info[2]);
+		client.setBalance(stod(info[3]));
+		return client;
+	}
+	static Employee parseToEmployee(string line) {
+		vector<string> info = split(line);
+		Employee employee;
+		employee.setID(stoi(info[0]));
+		employee.setName(info[1]);
+		employee.setPassword(info[2]);
+		employee.setSalary(stod(info[3]));
+		return employee;
+	}
+	static Admin parseToAdmin(string line) {
+		vector<string> info = split(line);
+		Admin admin;
+		admin.setID(stoi(info[0]));
+		admin.setName(info[1]);
+		admin.setPassword(info[2]);
+		admin.setSalary(stod(info[3]));
+		return admin;
+	}
+};
+

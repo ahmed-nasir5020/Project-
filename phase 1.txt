@@ -1,0 +1,188 @@
+#pragma once
+#include <iostream>
+using namespace std;
+
+
+class Validation {
+public:
+	static bool validatename(string name) {
+		if (!(name.size() >= 5 && name.size() <= 20)) {
+			cout << "the size of name must be >=5 and <=20\n";
+			return false;
+		}
+		
+		for (int i = 0; i < name.size(); i++) {
+			if (!(name[i] >= 'a' && name[i] <= 'z' || name[i] >= 'A' && name[i] <= 'Z')) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	static bool validatepassword(string password) {
+		if (password.size() >= 8 && password.size() <= 20) {
+			return true;
+		}
+		else
+		{
+			cout << " the password must be >= 8 And <= 20\n";
+			return false;
+		}
+	}
+
+	static bool validateBalance(double balance) {
+		if (balance < 1500) {
+			return false;
+		}
+		return true;
+	}
+	static bool validateSalary(double salary) {
+		if (salary < 5000) {
+			return false;
+		}
+		return true;
+	}
+};
+=====================================================================================
+#pragma once
+#include <iostream>
+#include "Validation.h"
+using namespace std;
+class Person
+{
+private:
+	int id;
+	string name, password;
+public:
+	Person() {
+		id = 0;
+		name = "";
+		password = "";
+	}
+	Person(int id, string name, string password) {
+		setID(id);
+		setName(name);
+		setPassword(password);
+	}
+	//setter
+	void setName(string name) {
+		if (Validation::validatename(name)) 
+			this->name = name;
+		else cout << "Invalid name\n";
+	}
+	void setPassword(string passwrod) {
+		if (Validation::validatepassword(password))
+			this->password = passwrod;
+		else cout << "Invalid password\n";
+	}
+	void setID(int id) {
+		this->id = id;
+	}
+	//getter
+	string getName() {
+		return name;
+	}
+	string getPassword() {
+		return password;
+	}
+	int getID() {
+		return id;
+	}
+	//method
+	void display() {
+		cout << "ID : " << id << endl;
+		cout << "Name : " << name << endl;
+		cout << "Password : " << password << endl;
+	}
+
+};
+======================================================================================
+#pragma once
+#include "Person.h"
+
+class Client : public Person
+{
+private:
+	double balance;
+public:
+	Client() : Person() {
+		balance = 0;
+	}
+	Client(int id, string name, string password, double balance) : Person(id, name, password) {
+		setBalance(balance);
+	}
+	//setter
+	void setBalance(double balance) {
+		if (Validation::validateBalance(balance)) 
+			this->balance = balance;
+		else cout << "Invalid balance\n";
+	}
+	//getter
+	double getBalance() {
+		return balance;
+	}
+	//methods
+	void deposit(double amount) {
+		if (amount > 0)
+			this->balance += amount;
+	}
+	void withdraw(double amount) {
+		if (amount <= balance && amount > 0)
+			this->balance -= amount;
+	}
+	void transferTo(double amount, Client& recipient) {
+		withdraw(amount);
+		recipient.deposit(amount);
+	}
+	void checkBalance() {
+		cout << "Balance : " << balance << endl;
+	}
+	void display() {
+		Person::display();
+		cout << "Balance : " << balance << endl;
+	}
+};
+============================================================================
+#pragma once
+#include "Person.h"
+class Employee : public Person
+{
+private:
+	double salary;
+public:
+	Employee() : Person() {
+		salary = 0;
+	}
+	Employee(int id, string name, string password, double salary) : Person(id, name, password) {
+		setSalary(salary);
+	}
+
+	void setSalary(double salary) {
+		if (Validation::validateSalary(salary)) 
+			this->salary = salary;
+		else cout << "Invalid salary\n";
+	}
+
+	double getSalary() {
+		return salary;
+	}
+
+	void display() {
+		Person::display();
+		cout << "Salary : " << salary << endl;
+	}
+};
+=======================================================================
+#pragma once
+#include "Employee.h"
+class Admin : public Employee
+{
+public:
+	Admin() : Employee() {
+
+	}
+	Admin(int id, string name, string password, double salary) : Employee(id, name, password, salary) {
+
+	}
+
+};

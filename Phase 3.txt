@@ -1,0 +1,416 @@
+#pragma once
+#include "FileManger.h"
+#include "Validation.h"
+
+class ClientManager {
+private:
+	static void printClientMenu() {
+		system("cls");
+		cout << "(1) Display my info" << endl;
+		cout << "(2) Check balance" << endl;
+		cout << "(3) Update Password" << endl;
+		cout << "(4) Withdraw" << endl;
+		cout << "(5) Deposit" << endl;
+		cout << "(6) Transfer amount" << endl;
+		cout << "(7) Logout\n" << endl;
+	}
+	static void back(Client* client) {
+		cout << endl;
+		system("pause");
+		clientOptions(client);
+	}
+public:
+	static void updatePassword(Person* person) {
+		person->setPassword(Validation::enterPassword());
+		cout << "\nPassword updated.\n";
+	}
+	static Client* login(int id, string password) {
+		for (clIt = allClients.begin(); clIt != allClients.end(); clIt++) {
+			if (clIt->getID() == id && clIt->getPassword() == password) return clIt._Ptr;
+		}
+		return NULL;
+	}
+	static bool clientOptions(Client* client) {
+		printClientMenu();
+		cout << "Your choice is: ";
+		Employee e;
+		double amount;
+		int choice, id;
+		cin >> choice;
+		switch (choice) {
+		case 1:
+			system("cls");
+			client->display();
+			break;
+		case 2:
+			system("cls");
+			client->checkBalance();
+			break;
+		case 3:
+			updatePassword(client);
+			FileManager::updateClients();
+			break;
+		case 4:
+			system("cls");
+			cout << "Enter amount to withdraw: ";
+			cin >> amount;
+			client->withdraw(amount);
+			FileManager::updateClients();
+			break;
+		case 5:
+			system("cls");
+			cout << "Enter amount to deposit: ";
+			cin >> amount;
+			client->deposit(amount);
+			FileManager::updateClients();
+			break;
+		case 6:
+			system("cls");
+			cout << "Enter id of the recipient: ";
+			cin >> id;
+			while (e.searchClient(id) == NULL) {
+				system("cls");
+				cout << "Invalid id.\n";
+				cout << "\nEnter id of the recipient: ";
+				cin >> id;
+			}
+			cout << "\nEnter amount to transfer: ";
+			cin >> amount;
+			client->transferTo(amount, *e.searchClient(id));
+			FileManager::updateClients();
+			break;
+		case 7:
+			return false;
+			break;
+		default:
+			system("cls");
+			clientOptions(client);
+			return true;
+		}
+		back(client);
+		return true;
+	}
+};
+
+========================================================================================
+
+#pragma once
+#include "ClientManager.h"
+
+class EmployeeManager {
+private:
+	static void printEmployeeMenu() {
+		system("cls");
+		cout << "(1) Display my info" << endl;
+		cout << "(2) Update Password" << endl;
+		cout << "(3) Add new client" << endl;
+		cout << "(4) Search for client" << endl;
+		cout << "(5) List all clients" << endl;
+		cout << "(6) Edit client info" << endl;
+		cout << "(7) Logout\n" << endl;
+	}
+	static void back(Employee* employee) {
+		cout << endl;
+		system("pause");
+		employeeOptions(employee);
+	}
+public:
+	static void newClient(Employee* employee) {
+		Client client;
+		client.setID(FilesHelper::getLast("ClientLastId.txt") + 1);
+		string password;
+		client.setName(Validation::enterName());
+		client.setPassword(Validation::enterPassword());
+		employee->addClient(client);
+		FileManager::updateClients();
+		cout << "\nClient added successfully.\n";
+	}
+	static void searchForClient(Employee* employee) {
+		int id;
+		system("cls");
+		cout << "Enter client id: ";
+		cin >> id;
+		if (employee->searchClient(id) == NULL) cout << "\nClient not found.\n";
+		else employee->searchClient(id)->display();
+	}
+	static void listAllClients(Employee* employee) {
+		system("cls");
+		cout << "All clients: \n" << endl;
+		employee->listClient();
+	}
+	static void editClientInfo(Employee* employee) {
+		int id;
+		system("cls");
+		cout << "Enter client id: ";
+		cin >> id;
+		if (employee->searchClient(id) == NULL) cout << "\nClient not found.\n";
+		else {
+			string name = Validation::enterName();
+			string password = Validation::enterPassword();
+			double balance = Validation::enterBalance();
+			employee->editClient(id, name, password, balance);
+			FileManager::updateClients();
+			cout << "\nClient info updated.\n";
+		}
+	}
+	static Employee* login(int id, string password) {
+		for (eIt = allEmployees.begin(); eIt != allEmployees.end(); eIt++) {
+			if (eIt->getID() == id && eIt->getPassword() == password) return eIt._Ptr;
+		}
+		return NULL;
+	}
+	static bool employeeOptions(Employee* employee) {
+		printEmployeeMenu();
+		cout << "Your choice is: ";
+		int choice;
+		cin >> choice;
+		switch (choice) {
+		case 1:
+			system("cls");
+			employee->display();
+			break;
+		case 2:
+			ClientManager::updatePassword(employee);
+			FileManager::updateEmployees();
+			break;
+		case 3:
+			newClient(employee);
+			break;
+		case 4:
+			searchForClient(employee);
+			break;
+		case 5:
+			listAllClients(employee);
+			break;
+		case 6:
+			editClientInfo(employee);
+			break;
+		case 7:
+			return false;
+			break;
+		default:
+			system("cls");
+			employeeOptions(employee);
+			return true;
+		}
+		back(employee);
+		return true;
+	}
+};
+
+
+=====================================================================================
+
+#pragma once
+#include "EmployeeManager.h"
+
+class AdminManager {
+private:
+	static void printAdminMenu() {
+		system("cls");
+		cout << "(1) Display my info" << endl;
+		cout << "(2) Update Password" << endl;
+		cout << "(3) Add new client" << endl;
+		cout << "(4) Search for client" << endl;
+		cout << "(5) List all clients" << endl;
+		cout << "(6) Edit client info" << endl;
+		cout << "(7) Add new Employee" << endl;
+		cout << "(8) Search for Employee" << endl;
+		cout << "(9) List all Employees" << endl;
+		cout << "(10) Edit Employee info" << endl;
+		cout << "(11) Logout\n" << endl;
+	}
+	static void back(Admin* admin) {
+		cout << endl;
+		system("pause");
+		adminOptions(admin);
+	}
+public:
+	static Admin* login(int id, string password) {
+		for (aIt = allAdmins.begin(); aIt != allAdmins.end(); aIt++) {
+			if (aIt->getID() == id && aIt->getPassword() == password) return aIt._Ptr;
+		}
+		return NULL;
+	}
+	static bool adminOptions(Admin* admin) {
+		printAdminMenu();
+		cout << "Your choice is: ";
+		Employee e;
+		int choice, id;
+		cin >> choice;
+		switch (choice) {
+		case 1:
+			system("cls");
+			admin->display();
+			break;
+		case 2:
+			ClientManager::updatePassword(admin);
+			FileManager::updateAdmins();
+			break;
+		case 3:
+			EmployeeManager::newClient(admin);
+			break;
+		case 4:
+			EmployeeManager::searchForClient(admin);
+			break;
+		case 5:
+			EmployeeManager::listAllClients(admin);
+			break;
+		case 6:
+			EmployeeManager::editClientInfo(admin);
+			break;
+		case 7:
+			e.setName(Validation::enterName());
+			e.setPassword(Validation::enterPassword());
+			e.setSalary(Validation::enterSalary());
+			e.setID(FilesHelper::getLast("EmployeeLastId.txt") + 1);
+			admin->addEmployee(e);
+			FileManager::updateEmployees();
+			cout << "\nEmployee added successfully.\n";
+			break;
+		case 8:
+			system("cls");
+			cout << "Enter employee id: ";
+			cin >> id;
+			if (admin->searchEmployee(id) == NULL) cout << "\nEmployee not found.\n";
+			else admin->searchEmployee(id)->display();
+			break;
+		case 9:
+			system("cls");
+			cout << "All employees: \n" << endl;
+			admin->listEmployee();
+			break;
+		case 10:
+			system("cls");
+			cout << "Enter employee id: ";
+			cin >> id;
+			if (admin->searchEmployee(id) == NULL) cout << "\nEmployee not found.\n";
+			else {
+				string name = Validation::enterName();
+				string  password = Validation::enterPassword();
+				double salary = Validation::enterSalary();
+				admin->editEmployee(id, name, password, salary);
+				FileManager::updateEmployees();
+				cout << "\nEmployee info updated.\n";
+			}
+			break;
+		case 11:
+			return false;
+			break;
+		default:
+			system("cls");
+			adminOptions(admin);
+			return true;
+		}
+		back(admin);
+		return true;
+	}
+};
+
+
+=============================================================================================
+
+
+#pragma once
+#include <iostream>
+#include <stdlib.h>
+#include <chrono>
+#include <thread>
+#include <windows.h>
+#include "AdminManager.h"
+using namespace std;
+
+class Screens {
+private:
+	static void bankName() {
+		cout << "\t\t@@       @@   @@@@@@@      #######   ########  ####     ##  ##   ##\n";
+		cout << "\t\t@@   @   @@   @@           ##    ##  ##    ##  ## ##    ##  ##  ##\n";
+		cout << "\t\t@@  @@@  @@   @@@@@@@      #######   ########  ##  ##   ##  ## #\n";
+		cout << "\t\t@@ @@ @@ @@   @@           ##    ##  ##    ##  ##   ##  ##  ##  ##\n";
+		cout << "\t\t@@@     @@@   @@@@@@@      #######   ##    ##  ##    ####   ##   ##\n";
+	}
+	static void welcome() {
+		system("Color 3f");
+		cout << "\n\n\n\n\n\n\t    ##       ##   #######   ##      #######  ########    ####    ####   #######\n";
+		cout << "\t    ##   #   ##   ##        ##      ##       ##    ##    ##  #  #  ##   ##\n";
+		cout << "\t    ##  ###  ##   ######    ##      ##       ##    ##    ##   ##   ##   #######\n";
+		cout << "\t    ## ## ## ##   ##        ##      ##       ##    ##    ##        ##   ##\n";
+		cout << "\t    ###     ###   #######   ######  #######  ########    ##        ##   #######\n\n\n";
+		bankName();
+		Sleep(3000);
+		system("cls");
+		system("Color 0f");
+	}
+	static void loginOptions() {
+		cout << "(1) Admin" << endl;
+		cout << "(2) Employee" << endl;
+		cout << "(3) Client\n" << endl;
+		cout << "Login as: ";
+	}
+	static int loginAs() {
+		loginOptions();
+		int choice;
+		cin >> choice;
+		if (choice == 1 || choice == 2 || choice == 3) {
+			system("cls");
+			return choice;
+		}
+		else {
+			system("cls");
+			return loginAs();
+		}
+	}
+	static void invalid(int c) {
+		system("cls");
+		cout << "Incorrect id or password.\n" << endl;
+		loginScreen(c);
+	}
+	static void logout() {
+		system("cls");
+		loginScreen(loginAs());
+	}
+	static void loginScreen(int c) {
+		int choice = c, id;
+		string pass;
+		cout << "Enter id: ";
+		cin >> id;
+		cout << "Enter password: ";
+		cin >> pass;
+		switch (choice)
+		{
+		case 1:
+			if (AdminManager::login(id, pass) != NULL) {
+				while (AdminManager::adminOptions(AdminManager::login(id, pass)) != false);
+				logout();
+			}
+			else invalid(1);
+			break;
+		case 2:
+			if (EmployeeManager::login(id, pass) != NULL) {
+				while (EmployeeManager::employeeOptions(EmployeeManager::login(id, pass)) != false);
+				logout();
+			}
+			else invalid(2);
+			break;
+		case 3:
+			if (ClientManager::login(id, pass) != NULL)
+			{
+				while (ClientManager::clientOptions(ClientManager::login(id, pass)) != false);
+				logout();
+			}
+			else invalid(3);
+			break;
+		default:
+			system("cls");
+			loginOptions();
+		}
+	}
+public:
+	static void runApp() {
+		FileManager::getAllData();
+		welcome();
+		loginScreen(loginAs());
+	}
+};
+
+
